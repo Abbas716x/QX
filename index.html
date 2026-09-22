@@ -1,0 +1,510 @@
+<!DOCTYPE html> 
+<html lang="ar" dir="rtl"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>716QX | Lounge OS 3.5</title> 
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet"> 
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/> 
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <script>
+        (function() {
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+            document.addEventListener('keydown', function(e) {
+                if (
+                    e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || 
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's'))
+                ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        })();
+    </script>
+
+    <script> 
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    colors: { 
+                        obsidian: '#030307', 
+                        cardDark: 'rgba(10, 10, 18, 0.82)', 
+                        panelDark: '#07070d', 
+                        cyanGlow: '#06B6D4', 
+                        violetApex: '#8B5CF6', 
+                        emeraldGlow: '#22C55E', 
+                        roseAlert: '#F43F5E', 
+                        amberWarn: '#F59E0B' 
+                    }, 
+                    fontFamily: { 
+                        ar: ['Tajawal', 'sans-serif'], 
+                        en: ['Plus Jakarta Sans', 'sans-serif'] 
+                    } 
+                } 
+            } 
+        } 
+    </script> 
+</head> 
+<body class="h-screen flex flex-col selection:bg-violetApex/30"> 
+    <canvas id="interactive-canvas"></canvas> 
+    <div class="ambient-aurora"></div> 
+    <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2 pointer-events-none items-center"></div> 
+
+    <!-- القائمة الجانبية -->
+    <aside id="drawer" class="fixed top-0 right-0 w-80 h-full glass-card z-[150] transition-transform duration-300 ease-out translate-x-full border-l border-white/10 p-8 flex flex-col shadow-2xl"> 
+        <div class="flex justify-between items-center mb-10"> 
+            <div class="flex items-center gap-3"> 
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violetApex to-cyanGlow flex items-center justify-center font-en font-black text-white text-2xl shadow-lg shadow-violetApex/30">R</div> 
+                <div> 
+                    <h2 class="text-xl font-black font-en tracking-wider">716QX</h2> 
+                    <span class="text-[10px] text-cyanGlow font-en font-bold tracking-widest uppercase">Lounge OS 3.5</span> 
+                </div> 
+            </div> 
+            <button onclick="window.toggleDrawer()" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center text-gray-400 hover:text-white">✕</button> 
+        </div> 
+        <nav class="flex flex-col gap-2 flex-1"> 
+            <button id="nav-dashboard" onclick="window.switchView('dashboard')" class="sidebar-link bg-violetApex/15 text-violetApex border-r-4 border-violetApex flex items-center gap-4 p-4 rounded-2xl transition-all font-bold"> 
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> لوحة التحكم 
+            </button> 
+            <button id="nav-tables" onclick="window.switchView('tables')" class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold"> 
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg> خريطة الجداول 
+            </button> 
+            <button id="nav-debts" onclick="window.switchView('debts')" class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold"> 
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> الديون والتسديد 
+            </button> 
+            <button id="nav-invoices" onclick="window.switchView('invoices')" class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold"> 
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path></svg> سجل الفواتير 
+            </button> 
+            <button id="nav-menu" onclick="window.switchView('menu')" class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold"> 
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> الأقسام والمنيو 
+            </button> 
+        </nav> 
+        <div class="pt-6 border-t border-white/5 space-y-3"> 
+            <button onclick="if(confirm('هل أنت متأكد من رغبتك بإعادة ضبط النظام بالكامل وحذف كافة السجلات؟')) window.resetSystemFull()" class="w-full p-3.5 rounded-2xl bg-roseAlert/10 text-roseAlert border border-roseAlert/20 font-bold hover:bg-roseAlert hover:text-white transition-all text-xs flex items-center justify-center gap-2"> 
+                ⚠️ إعادة ضبط المصنع للنظام 
+            </button> 
+        </div> 
+    </aside> 
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-1 h-full overflow-y-auto relative flex flex-col no-scrollbar"> 
+        <header class="p-5 md:px-8 border-b border-white/5 flex justify-between items-center bg-black/20 backdrop-blur-md sticky top-0 z-40"> 
+            <div class="flex items-center gap-5"> 
+                <button onclick="window.toggleDrawer()" class="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white active:scale-95"> 
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> 
+                </button> 
+                <div> 
+                    <h1 class="text-xl font-black font-en tracking-wide flex items-center gap-1">716QX<span class="text-violetApex text-2xl">.</span></h1> 
+                    <div id="live-clock" class="text-xs text-gray-400 font-en tracking-wider font-semibold">00:00:00</div> 
+                </div> 
+            </div> 
+            <div class="hidden md:flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/5"> 
+                <button onclick="window.switchView('dashboard')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-gray-300 transition-all">لوحة التحكم</button> 
+                <button onclick="window.switchView('tables')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-gray-300 transition-all">الجداول</button> 
+                <button onclick="window.switchView('debts')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-roseAlert transition-all">الديون</button> 
+                <button onclick="window.switchView('invoices')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-gray-300 transition-all">الفواتير</button> 
+                <button onclick="window.switchView('menu')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-violetApex transition-all">المنيو</button> 
+            </div> 
+            <div class="flex items-center gap-3"> 
+                <button onclick="window.openAddTableModal()" class="glow-btn-primary px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm text-white flex items-center gap-2"> 
+                    <span class="text-base font-black">+</span> <span>طاولة جديدة</span> 
+                </button> 
+            </div> 
+        </header> 
+
+        <!-- لوحة التحكم -->
+        <div id="view-dashboard" class="view p-6 md:p-8 flex-1 animate__animated animate__fadeIn"> 
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"> 
+                <div> 
+                    <h2 class="text-3xl font-black text-white">مركز التحكم المالي</h2> 
+                    <p class="text-gray-400 text-xs md:text-sm mt-1">المبيعات اليومية مستمرة ولا تتصفر تلقائياً، بل ترحل للشهر بطلبك</p> 
+                </div> 
+                <div class="flex items-center gap-2 flex-wrap"> 
+                    <button onclick="if(confirm('هل أنت متأكد من تصفير مبيعات اليوم وترحيلها للإيراد الشهري؟')) window.resetDailyRevenue()" class="px-4 py-2 rounded-xl bg-emeraldGlow/10 hover:bg-emeraldGlow/20 text-emeraldGlow border border-emeraldGlow/20 text-xs font-bold transition-all flex items-center gap-2"> 
+                        <span>🔄</span> تصفير اليوم وترحيل للشهر 
+                    </button> 
+                    <button onclick="if(confirm('هل أنت متأكد من تصفير الإيراد الشهري بالكامل؟')) window.resetMonthlyRevenue()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-amberWarn/20 text-gray-300 hover:text-amberWarn border border-white/10 text-xs font-bold transition-all flex items-center gap-2"> 
+                        <span>🗓</span> تصفير الشهر 
+                    </button> 
+                </div> 
+            </div> 
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"> 
+                <div class="glass-card p-6 rounded-3xl relative overflow-hidden border-t-2 border-emeraldGlow group"> 
+                    <div class="flex justify-between items-center mb-2"> 
+                        <span class="text-xs text-gray-400 font-bold">مبيعات اليوم الحالية</span> 
+                        <span class="w-2.5 h-2.5 rounded-full bg-emeraldGlow animate-ping"></span> 
+                    </div> 
+                    <div class="flex items-baseline gap-2"> 
+                        <h3 id="stat-daily" class="text-3xl font-en font-black text-white tracking-tight">0</h3> 
+                        <span class="text-xs text-emeraldGlow font-bold">د.ع</span> 
+                    </div> 
+                    <span class="text-[10px] text-gray-500 font-bold mt-2 block">مستمرة حتى تضغط تصفير اليوم</span> 
+                </div> 
+                <div class="glass-card p-6 rounded-3xl relative overflow-hidden border-t-2 border-cyanGlow"> 
+                    <span class="text-xs text-gray-400 block mb-2 font-bold">مبيعات الأمس</span> 
+                    <div class="flex items-baseline gap-2"> 
+                        <h3 id="stat-yesterday" class="text-3xl font-en font-black text-cyanGlow tracking-tight">0</h3> 
+                        <span class="text-xs text-cyanGlow font-bold">د.ع</span> 
+                    </div> 
+                    <span class="text-[10px] text-gray-500 font-bold mt-2 block">إجمالي اليوم السابق بعد الترحيل</span> 
+                </div> 
+                <div class="glass-card p-6 rounded-3xl relative overflow-hidden border-t-2 border-amberWarn"> 
+                    <span class="text-xs text-gray-400 block mb-2 font-bold">الإيراد الشهري التراكمي</span> 
+                    <div class="flex items-baseline gap-2"> 
+                        <h3 id="stat-monthly" class="text-3xl font-en font-black text-amberWarn tracking-tight">0</h3> 
+                        <span class="text-xs text-amberWarn font-bold">د.ع</span> 
+                    </div> 
+                    <span class="text-[10px] text-gray-500 font-bold mt-2 block">مجموع المبيعات المرحلة شهرياً</span> 
+                </div> 
+                <div class="glass-card p-6 rounded-3xl relative overflow-hidden border-t-2 border-violetApex"> 
+                    <span class="text-xs text-gray-400 block mb-2 font-bold">الجلسات المفتوحة</span> 
+                    <div class="flex items-baseline gap-2"> 
+                        <h3 id="stat-active" class="text-3xl font-en font-black text-violetApex tracking-tight">0</h3> 
+                        <span class="text-xs text-gray-400 font-bold">جلسة الآن</span> 
+                    </div> 
+                    <span class="text-[10px] text-violetApex font-bold mt-2 block">المحطات النشطة حالياً</span> 
+                </div> 
+            </div> 
+
+            <h3 class="text-lg font-bold text-white mb-4">اختصارات سريعة</h3> 
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"> 
+                <div onclick="window.switchView('tables')" class="glass-card p-6 rounded-3xl cursor-pointer hover:border-violetApex/40 flex items-center gap-5 group"> 
+                    <div class="w-14 h-14 rounded-2xl bg-violetApex/10 text-violetApex flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🎮</div> 
+                    <div> 
+                        <h4 class="font-bold text-white text-base group-hover:text-violetApex transition-colors">خريطة الطاولات</h4> 
+                        <p class="text-gray-400 text-xs mt-0.5">مراقبة العدادات والجلسات الحية</p> 
+                    </div> 
+                </div> 
+                <div onclick="window.switchView('debts')" class="glass-card p-6 rounded-3xl cursor-pointer hover:border-roseAlert/40 flex items-center gap-5 group"> 
+                    <div class="w-14 h-14 rounded-2xl bg-roseAlert/10 text-roseAlert flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📒</div> 
+                    <div> 
+                        <h4 class="font-bold text-white text-base group-hover:text-roseAlert transition-colors">دفتر الديون</h4> 
+                        <p class="text-gray-400 text-xs mt-0.5">متابعة حسابات الزبائن والآجل</p> 
+                    </div> 
+                </div> 
+                <div onclick="window.switchView('menu')" class="glass-card p-6 rounded-3xl cursor-pointer hover:border-cyanGlow/40 flex items-center gap-5 group"> 
+                    <div class="w-14 h-14 rounded-2xl bg-cyanGlow/10 text-cyanGlow flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📋</div> 
+                    <div> 
+                        <h4 class="font-bold text-white text-base group-hover:text-cyanGlow transition-colors">إدارة الأقسام والمنيو</h4> 
+                        <p class="text-gray-400 text-xs mt-0.5">تعديل أقسام البلي، المشروبات والأسعار</p> 
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+
+        <!-- خريطة الطاولات -->
+        <div id="view-tables" class="view hidden p-6 md:p-8 flex-1 animate__animated animate__fadeIn"> 
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"> 
+                <div> 
+                    <h2 class="text-3xl font-black">خريطة الطاولات المباشرة</h2> 
+                    <p class="text-gray-400 text-xs md:text-sm mt-1">تحديث حي فوري للوقت والحسابات</p> 
+                </div> 
+                <div class="flex gap-3 w-full md:w-auto"> 
+                    <input type="text" id="search-tables" onkeyup="window.searchTables()" placeholder="ابحث برقم الطاولة أو اسم الزبون..." class="w-full md:w-80 bg-panelDark/80 border border-white/10 rounded-2xl px-5 py-3.5 outline-none focus:border-violetApex transition-all text-sm"> 
+                </div> 
+            </div> 
+            <div id="tables-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div> 
+        </div> 
+
+        <!-- تفاصيل الطاولة المحددة -->
+        <div id="view-table-detail" class="view hidden p-6 md:p-8 flex-1 animate__animated animate__fadeIn"> 
+            <div class="flex justify-between items-center mb-6"> 
+                <button onclick="window.switchView('tables')" class="px-5 py-2.5 glass-card rounded-xl hover:bg-white/10 transition-all font-bold text-xs flex items-center gap-2"> ➔ العودة للخريطة </button> 
+                <div class="text-center"> 
+                    <h2 id="detail-table-name" class="text-2xl md:text-3xl font-black text-white">اسم الطاولة</h2> 
+                    <span id="detail-customer-badge" class="text-xs text-cyanGlow font-bold">زبون عام</span> 
+                </div> 
+                <div class="w-24"></div> 
+            </div> 
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"> 
+                <div class="lg:col-span-8 glass-card p-6 md:p-8 rounded-3xl flex flex-col"> 
+                    <div class="flex justify-between items-center mb-6 flex-wrap gap-3"> 
+                        <div> 
+                            <h3 class="text-xl font-bold text-white">الطلبات والوقت</h3> 
+                            <p class="text-gray-400 text-xs mt-0.5">العدادات تحسب تدريجياً، مع إمكانية الدفع المبكر لكل طلب</p> 
+                        </div> 
+                        <button onclick="window.openProductPicker()" class="glow-btn-primary px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm text-white flex items-center gap-2"> 
+                            <span>+</span> <span>إضافة طلب / وقت من الأقسام</span> 
+                        </button> 
+                    </div> 
+                    <div id="detail-items-list" class="overflow-y-auto no-scrollbar space-y-3.5 max-h-[550px]"></div> 
+                </div> 
+                
+                <!-- لوحة الحساب الإجمالي -->
+                <div class="lg:col-span-4 glass-card p-6 md:p-8 rounded-3xl sticky top-4 border-t-4 border-violetApex flex flex-col"> 
+                    <h3 class="text-lg font-bold mb-6 text-gray-200 text-center">لوحة الحساب الإجمالي</h3> 
+                    <div class="space-y-4 mb-6"> 
+                        <div> 
+                            <label class="text-xs text-gray-400 font-bold block mb-1.5">اسم العميل / الزبون:</label> 
+                            <input type="text" id="input-table-customer" onchange="window.updateCustomerName(this.value)" placeholder="مثال: أحمد (VIP)" class="w-full bg-panelDark/90 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-violetApex text-sm font-bold"> 
+                        </div> 
+                        <div> 
+                            <label class="text-xs text-gray-400 font-bold block mb-1.5">خصم مباشر (IQD):</label> 
+                            <input type="number" id="input-table-discount" oninput="window.updateDiscountIQD(this.value)" min="0" placeholder="0 دينار" class="w-full bg-panelDark/90 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-violetApex text-sm font-en font-bold"> 
+                        </div> 
+                    </div> 
+                    <div class="bg-panelDark/80 p-5 rounded-2xl border border-white/5 space-y-3 mb-6"> 
+                        <div class="flex justify-between items-center text-gray-400 text-xs"> 
+                            <span>إجمالي الحساب الكلي:</span> 
+                            <span id="sum-subtotal" class="font-en font-bold text-white text-sm">0 IQD</span> 
+                        </div> 
+                        <div class="flex justify-between items-center text-emeraldGlow text-xs"> 
+                            <span>المدفوع مسبقاً (دفع مبكر):</span> 
+                            <span id="sum-early-paid" class="font-en font-bold text-emeraldGlow text-sm">0 IQD</span> 
+                        </div> 
+                        <div class="flex justify-between items-center text-roseAlert text-xs"> 
+                            <span>الخصم المباشر:</span> 
+                            <span id="sum-discount-val" class="font-en font-bold">-0 IQD</span> 
+                        </div> 
+                        <div class="h-px bg-white/10 my-1"></div> 
+                        <div class="flex justify-between items-center"> 
+                            <span class="text-white font-bold text-base">المبلغ المتبقي للدفع:</span> 
+                            <span class="font-en text-3xl font-black text-cyanGlow flex items-end gap-1"> 
+                                <span id="sum-final">0</span> 
+                                <span class="text-xs text-gray-400 font-normal mb-1">IQD</span> 
+                            </span> 
+                        </div> 
+                    </div> 
+                    <div class="flex flex-col gap-3"> 
+                        <button onclick="window.openCheckoutModal()" class="w-full py-4 glow-btn-primary rounded-xl font-black text-base flex items-center justify-center gap-2 text-white"> ✅ إغلاق الحساب / تحويل دين </button> 
+                        <button onclick="window.openTransferModal()" class="w-full py-3 glass-card rounded-xl font-bold hover:bg-white/10 transition-all text-xs"> ⇄ نقل أو دمج مع طاولة أخرى </button> 
+                        <button onclick="if(confirm('هل أنت متأكد من حذف هذه الطاولة وإلغائها؟')) window.deleteTable()" class="w-full py-2 text-gray-500 rounded-xl font-bold hover:text-roseAlert transition-all text-xs underline decoration-white/10"> إلغاء الطاولة وحذفها </button> 
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+
+        <!-- سجل الديون -->
+        <div id="view-debts" class="view hidden p-6 md:p-8 flex-1 animate__animated animate__fadeIn"> 
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"> 
+                <div> 
+                    <h2 class="text-3xl font-black">سجل الديون والحسابات الآجلة</h2> 
+                    <p class="text-gray-400 text-xs md:text-sm mt-1">متابعة وتسديد ديون الزبائن بشكل كلي أو جزئي</p> 
+                </div> 
+                <div class="flex gap-3 w-full md:w-auto"> 
+                    <input type="text" id="search-debts" onkeyup="window.renderDebtsList()" placeholder="ابحث باسم المدين..." class="w-full md:w-80 bg-panelDark/80 border border-white/10 rounded-2xl px-5 py-3.5 outline-none focus:border-roseAlert transition-all text-sm"> 
+                </div> 
+            </div> 
+            <div id="debts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div> 
+        </div> 
+
+        <!-- سجل الفواتير -->
+        <div id="view-invoices" class="view hidden p-6 md:p-8 flex-1 animate__animated animate__fadeIn"> 
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"> 
+                <div> 
+                    <h2 class="text-3xl font-black">أرشيف الفواتير المكتملة</h2> 
+                    <p class="text-gray-400 text-xs md:text-sm mt-1">عرض وطباعة وتصدير فواتير الجلسات المنتهية</p> 
+                </div> 
+                <div class="flex gap-3"> 
+                    <button onclick="window.exportInvoicesCSV()" class="px-5 py-3 rounded-xl bg-emeraldGlow/10 text-emeraldGlow font-bold hover:bg-emeraldGlow hover:text-black transition-all text-xs border border-emeraldGlow/20 flex items-center gap-2"> 📊 تصدير Excel </button> 
+                    <button onclick="if(confirm('هل أنت متأكد من مسح كامل أرشيف الفواتير؟')) window.clearAllInvoices()" class="px-5 py-3 rounded-xl bg-roseAlert/10 text-roseAlert font-bold hover:bg-roseAlert hover:text-white transition-all text-xs border border-roseAlert/20"> 🗑 مسح الأرشيف </button> 
+                </div> 
+            </div> 
+            <div class="glass-card rounded-3xl overflow-hidden border border-white/5"> 
+                <table class="w-full text-right"> 
+                    <thead class="bg-panelDark text-gray-400 font-bold text-xs border-b border-white/5"> 
+                        <tr> 
+                            <th class="p-5">رقم الفاتورة</th> 
+                            <th class="p-5">الطاولة / الزبون</th> 
+                            <th class="p-5">الإجمالي الصافي</th> 
+                            <th class="p-5">حالة الدفع</th> 
+                            <th class="p-5">التاريخ والوقت</th> 
+                            <th class="p-5">الإجراء</th> 
+                        </tr> 
+                    </thead> 
+                    <tbody id="invoice-list" class="divide-y divide-white/5 text-sm"></tbody> 
+                </table> 
+            </div> 
+        </div> 
+
+        <!-- إدارة المنيو والأقسام -->
+        <div id="view-menu" class="view hidden p-6 md:p-8 flex-1 animate__animated animate__fadeIn"> 
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"> 
+                <div> 
+                    <h2 class="text-3xl font-black">إدارة الأقسام والمنيو</h2> 
+                    <p class="text-gray-400 text-xs md:text-sm mt-1">تحديد الأصناف بالوقت التنازلي، الوقت المفتوح، أو الطلبات المباشرة</p> 
+                </div> 
+                <div class="flex gap-3"> 
+                    <button onclick="window.openModal('modal-add-category')" class="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs border border-white/10 flex items-center gap-2"> 
+                        <span>📁</span> <span>+ إضافة قسم جديد</span> 
+                    </button> 
+                    <button onclick="window.openAddProductModal()" class="glow-btn-primary px-6 py-3 rounded-xl font-bold text-xs text-white"> 
+                        + صنف جديد داخل قسم 
+                    </button> 
+                </div> 
+            </div> 
+            <div id="menu-category-nav" class="sticky top-0 z-20 mb-6 flex gap-2 overflow-x-auto no-scrollbar rounded-2xl bg-black/40 p-2 backdrop-blur-md border border-white/5"></div>
+            
+            <div id="menu-categories-container" class="space-y-8"></div> 
+        </div> 
+    </main> 
+
+    <!-- النوافذ المنبثقة (Modals) -->
+    <div id="modal-add-table" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-violetApex"> 
+            <button onclick="window.closeModal('modal-add-table')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <h3 class="text-xl font-black mb-2 text-center">فتح طاولة / جهاز جديد</h3> 
+            <p class="text-gray-400 text-xs mb-6 text-center">أدخل اسماً أو رقماً للطاولة لبدء الجلسة</p> 
+            <input type="text" id="input-new-table-name" placeholder="مثال: جهاز 5 (VIP) أو طاولة 3" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 mb-4 outline-none focus:border-violetApex text-sm font-bold"> 
+            <div class="flex flex-wrap gap-2 mb-6"> 
+                <button onclick="window.suggestTableName('PS5 - جهاز ')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-300 font-bold">🎮 صالة PS5</button> 
+                <button onclick="window.suggestTableName('غرفة VIP #')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-300 font-bold">👑 غرفة VIP</button> 
+                <button onclick="window.suggestTableName('طاولة كافيه ')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-300 font-bold">☕ طاولة كافيه</button> 
+            </div> 
+            <button onclick="window.confirmAddTable()" class="w-full py-3.5 glow-btn-primary rounded-xl font-bold text-white text-sm">تأكيد الفتح والتشغيل</button> 
+        </div> 
+    </div> 
+
+    <div id="modal-product-picker" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-2xl p-8 rounded-3xl relative border-t-4 border-cyanGlow flex flex-col max-h-[85vh]"> 
+            <button onclick="window.closeModal('modal-product-picker')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <div id="picker-header" class="mb-4"> 
+                <div class="flex items-center gap-3"> 
+                    <button id="picker-back-btn" onclick="window.pickerShowCategories()" class="hidden px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-cyanGlow">⬅ الأقسام الرئيسية</button> 
+                    <div> 
+                        <h3 id="picker-title" class="text-xl font-black text-white">اختر القسم أولاً</h3> 
+                        <p id="picker-subtitle" class="text-gray-400 text-xs">اضغط على القسم لعرض الأصناف والعدادات بداخله</p> 
+                    </div> 
+                </div> 
+            </div> 
+            <div id="picker-body" class="grid grid-cols-2 sm:grid-cols-3 gap-4 overflow-y-auto no-scrollbar flex-1 p-1"></div> 
+        </div> 
+    </div> 
+
+    <div id="modal-early-pay" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[220] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-emeraldGlow"> 
+            <button onclick="window.closeModal('modal-early-pay')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <div class="text-center mb-5"> 
+                <span class="text-3xl block mb-2">⚡</span> 
+                <h3 class="text-xl font-black text-white">تسديد مبكر للصنف</h3> 
+                <p id="early-item-name" class="text-emeraldGlow text-sm font-bold mt-1">اسم الصنف</p> 
+            </div> 
+            <div class="bg-panelDark/90 p-4 rounded-2xl border border-white/5 space-y-2 text-xs mb-5"> 
+                <div class="flex justify-between text-gray-400"> 
+                    <span>الإجمالي الحالي للصنف:</span> 
+                    <span id="early-item-total" class="font-en font-bold text-white">0 IQD</span> 
+                </div> 
+                <div class="flex justify-between text-emeraldGlow"> 
+                    <span>المدفوع مسبقاً:</span> 
+                    <span id="early-item-already-paid" class="font-en font-bold">0 IQD</span> 
+                </div> 
+                <div class="flex justify-between text-cyanGlow font-bold"> 
+                    <span>المتبقي المطلوب دفعه:</span> 
+                    <span id="early-item-remaining" class="font-en">0 IQD</span> 
+                </div> 
+            </div> 
+            <div id="early-qty-helpers" class="flex gap-2 mb-4 hidden"> 
+                <button type="button" onclick="window.quickPaySingleQty()" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-emeraldGlow/20 text-emeraldGlow border border-emeraldGlow/30 text-xs font-bold"> 
+                    دفع سعر قطعة واحدة فقط 
+                </button> 
+                <button type="button" onclick="window.quickPayAllRemaining()" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-cyanGlow/20 text-cyanGlow border border-cyanGlow/30 text-xs font-bold"> 
+                    دفع المتبقي بالكامل 
+                </button> 
+            </div> 
+            <div class="mb-6"> 
+                <label class="text-xs text-gray-400 font-bold block mb-1.5">المبلغ المراد دفعه نقدًا الآن (IQD):</label> 
+                <input type="number" id="input-early-pay-amount" min="1" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 outline-none focus:border-emeraldGlow text-base font-en font-bold text-white"> 
+            </div> 
+            <button onclick="window.confirmEarlyPayment()" class="w-full py-3.5 glow-btn-emerald rounded-xl font-bold text-white text-sm"> 
+                ✓ تأكيد استلام المبلغ وإضافته للكاش 
+            </button> 
+        </div> 
+    </div> 
+
+    <div id="modal-checkout" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-emeraldGlow"> 
+            <button onclick="window.closeModal('modal-checkout')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <h3 class="text-xl font-black mb-2 text-center">إغلاق الحساب النهائي</h3> 
+            <div class="bg-panelDark/80 p-4 rounded-2xl border border-white/5 my-4 space-y-2 text-sm"> 
+                <div class="flex justify-between"><span class="text-gray-400">المبلغ المتبقي المطلوب:</span><span id="checkout-total-val" class="font-en font-bold text-cyanGlow">0 IQD</span></div> 
+            </div> 
+            <div class="space-y-4 mb-6"> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">المبلغ المدفوع كاش الآن (IQD):</label> 
+                    <input type="number" id="checkout-paid-amount" oninput="window.calculateDebtSplit()" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-emeraldGlow text-sm font-en font-bold"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-roseAlert font-bold block mb-1">المبلغ المتبقي (تحويل إلى دين في السجل):</label> 
+                    <input type="number" id="checkout-debt-amount" readonly class="w-full bg-panelDark/50 border border-roseAlert/30 rounded-xl p-3 outline-none text-roseAlert font-en font-bold"> 
+                </div> 
+            </div> 
+            <button onclick="window.confirmCheckout()" class="w-full py-4 glow-btn-primary rounded-xl font-black text-white text-sm">تأكيد عملية الدفع والأرشفة</button> 
+        </div> 
+    </div> 
+
+    <div id="modal-transfer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-violetApex"> 
+            <button onclick="window.closeModal('modal-transfer')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <h3 class="text-xl font-black mb-2 text-center">نقل أو دمج الطاولة</h3> 
+            <p class="text-gray-400 text-xs mb-6 text-center">اختر الطاولة الهدف لنقل كافة الطلبات والمدفوعات إليها</p> 
+            <select id="transfer-target-select" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 mb-6 outline-none focus:border-violetApex text-sm font-bold text-white"></select> 
+            <button onclick="window.confirmTransfer()" class="w-full py-3.5 glow-btn-primary rounded-xl font-bold text-white text-sm">تأكيد النقل والدمج</button> 
+        </div> 
+    </div>
+
+    <div id="modal-add-category" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-cyanGlow"> 
+            <button onclick="window.closeModal('modal-add-category')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <h3 class="text-xl font-black mb-2 text-center">إضافة قسم جديد</h3> 
+            <p class="text-gray-400 text-xs mb-6 text-center">أنشئ قسماً مثل: ألعاب بليستيشن، عصائر، نراكيل</p> 
+            <div class="space-y-4 mb-6"> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">اسم القسم:</label> 
+                    <input type="text" id="new-cat-name" placeholder="مثال: قسم البلي أو قسم العصائر" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-bold"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">رمز تعبيري (Emoji):</label> 
+                    <input type="text" id="new-cat-icon" placeholder="🎮" value="🎮" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-bold"> 
+                </div> 
+            </div> 
+            <button onclick="window.confirmAddCategory()" class="w-full py-3.5 glow-btn-cyan rounded-xl font-bold text-black text-sm">حفظ القسم</button> 
+        </div> 
+    </div>
+
+    <div id="modal-add-product" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-violetApex"> 
+            <button onclick="window.closeModal('modal-add-product')" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <h3 class="text-xl font-black mb-2 text-center">إضافة صنف / عداد وقت جديد</h3> 
+            <div class="space-y-4 mb-6"> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">القسم التابع له:</label> 
+                    <select id="new-prod-cat-select" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold text-white"></select> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">اسم الصنف:</label> 
+                    <input type="text" id="new-prod-name" placeholder="مثال: نصف ساعة منضدة، ساعة بلي، أو بيبسي" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">نوع الحساب / العداد:</label> 
+                    <select id="new-prod-type" onchange="window.handleProductTypeChange(this.value)" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold text-white"> 
+                        <option value="direct">صنف مباشر (مشروبات، وجبات، مأكولات)</option> 
+                        <option value="countdown">عداد تنازلي محدد (مثال: نصف ساعة بـ 2000 دينار تدريجي)</option> 
+                        <option value="open">عداد تصاعدي مفتوح (سعر الساعة تدريجي مثلاً: 4000/ساعة)</option> 
+                    </select> 
+                </div> 
+                <div id="row-prod-duration" class="hidden"> 
+                    <label class="text-xs text-cyanGlow font-bold block mb-1">مدة الوقت بالدقائق (مثال: 30 لنصف ساعة، 60 لساعة):</label> 
+                    <input type="number" id="new-prod-duration" placeholder="مثال: 30" min="1" class="w-full bg-panelDark border border-cyanGlow/40 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-en font-bold"> 
+                </div> 
+                <div> 
+                    <label id="lbl-prod-price" class="text-xs text-gray-400 font-bold block mb-1">السعر (IQD):</label> 
+                    <input type="number" id="new-prod-price" placeholder="مثال: 2000" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-en font-bold"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-400 font-bold block mb-1">الأيقونة (Emoji):</label> 
+                    <input type="text" id="new-prod-icon" placeholder="🎮" value="🎮" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold"> 
+                </div> 
+            </div> 
+            <button onclick="window.confirmAddProduct()" class="w-full py-3.5 glow-btn-primary rounded-xl font-bold text-white text-sm">حفظ الصنف في القسم</button> 
+        </div> 
+    </div>
+
+    <!-- استدعاء ملفات الجافاسكربت -->
+    <script src="assets/js/effects.min.js"></script> 
+    <script src="assets/js/core.min.js"></script> 
+</body> 
+</html>
