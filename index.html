@@ -84,6 +84,17 @@
             </button> 
         </nav> 
         <div class="pt-6 border-t border-white/5 space-y-3"> 
+            <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <div class="text-[10px] text-gray-400 font-bold">الصالة النشطة حالياً:</div>
+                <div id="drawer-shop-name" class="text-sm font-black text-white">صالة 716QX الرئيسية</div>
+                <div id="drawer-shop-code" class="text-xs text-cyanGlow font-mono">رمز: 716qx</div>
+            </div>
+            <button onclick="window.CloudDB.logoutShop()" class="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+                <span>🔄</span> تبديل الصالة / خروج
+            </button>
+            <button onclick="window.SaaS.openAdminPortal()" class="w-full p-3 rounded-xl bg-violetApex/15 hover:bg-violetApex text-violetApex hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all border border-violetApex/30">
+                <span>👑</span> لوحة تحكم الأدمن
+            </button>
             <button onclick="if(confirm('هل أنت متأكد من رغبتك بإعادة ضبط النظام بالكامل وحذف كافة السجلات؟')) window.resetSystemFull()" class="w-full p-3.5 rounded-2xl bg-roseAlert/10 text-roseAlert border border-roseAlert/20 font-bold hover:bg-roseAlert hover:text-white transition-all text-xs flex items-center justify-center gap-2"> 
                 ⚠️ إعادة ضبط المصنع للنظام 
             </button> 
@@ -101,6 +112,10 @@
                     <h1 class="text-xl font-black font-en tracking-wide flex items-center gap-1">716QX<span class="text-violetApex text-2xl">.</span></h1> 
                     <div id="live-clock" class="text-xs text-gray-400 font-en tracking-wider font-semibold">00:00:00</div> 
                 </div> 
+                <div class="hidden sm:flex flex-col border-r border-white/10 pr-4"> 
+                    <span id="header-shop-name" class="text-xs font-black text-cyanGlow truncate max-w-[140px]">الصالة الرئيسية</span> 
+                    <span id="header-shop-code" class="text-[10px] text-gray-400 font-mono">ID: 716qx</span> 
+                </div>
             </div> 
             <div class="hidden md:flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/5"> 
                 <button onclick="window.switchView('dashboard')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-gray-300 transition-all">لوحة التحكم</button> 
@@ -110,6 +125,18 @@
                 <button onclick="window.switchView('menu')" class="px-4 py-2 rounded-xl text-xs font-bold hover:text-white text-violetApex transition-all">المنيو</button> 
             </div> 
             <div class="flex items-center gap-3"> 
+                <!-- زر تبديل الصالة -->
+                <button onclick="window.CloudDB.logoutShop()" title="تبديل الصالة أو تسجيل الخروج" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-cyanGlow transition-all text-xs font-bold flex items-center gap-1">
+                    <span>🏬</span> <span class="hidden lg:inline text-[11px]">تبديل</span>
+                </button>
+                <!-- مؤشر الاتصال بالسحابة -->
+                <button id="cloud-status-badge" onclick="window.CloudDB && window.CloudDB.manualSync()" title="حالة قاعدة البيانات السحابية - اضغط للمزامنة اليدوية" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 transition-all active:scale-95 shadow-lg">
+                    <span id="cloud-status-dot" class="w-2.5 h-2.5 rounded-full bg-amberWarn animate-pulse"></span>
+                    <span id="cloud-status-text" class="hidden sm:inline">جاري الاتصال...</span>
+                    <svg id="cloud-sync-icon" class="w-3.5 h-3.5 text-gray-400 hover:text-cyanGlow transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
                 <button onclick="window.openAddTableModal()" class="glow-btn-primary px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm text-white flex items-center gap-2"> 
                     <span class="text-base font-black">+</span> <span>طاولة جديدة</span> 
                 </button> 
@@ -503,8 +530,188 @@
         </div> 
     </div>
 
+    <!-- نافذة تسجيل الدخول إلى الصالة (Shop Login Modal) -->
+    <div id="modal-shop-login" class="fixed inset-0 bg-obsidian/95 backdrop-blur-2xl z-[500] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-cyanGlow shadow-2xl space-y-6 animate__animated animate__fadeIn"> 
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-cyanGlow to-violetApex flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-cyanGlow/20">
+                    🏪
+                </div>
+                <h3 class="text-2xl font-black text-white">دخول الصالة السحابية</h3> 
+                <p class="text-gray-400 text-xs">أدخل رمز الصالة ورمز الدخول الخاص بك للربط السحابي (Multi-Tenant SaaS)</p> 
+            </div>
+
+            <div id="login-err-msg" class="hidden p-3 rounded-xl bg-roseAlert/15 border border-roseAlert/30 text-roseAlert text-xs font-bold text-center"></div>
+
+            <div class="space-y-4"> 
+                <div> 
+                    <label class="text-xs text-gray-300 font-bold block mb-1">معرّف / رمز الصالة (Shop ID):</label> 
+                    <input type="text" id="login-shop-id" placeholder="مثال: 716qx" value="716qx" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-300 font-bold block mb-1">رمز المرور السري (Passcode / PIN):</label> 
+                    <input type="password" id="login-shop-passcode" placeholder="مثال: 7160" value="7160" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr"> 
+                </div> 
+            </div> 
+
+            <!-- Quick Login Hints for Easy Testing -->
+            <div class="p-3 rounded-2xl bg-white/5 border border-white/5 space-y-2">
+                <div class="text-[10px] text-gray-400 font-bold">صالات تجريبية سريعة:</div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="window.SaaS.quickFill('716qx', '7160')" class="px-2.5 py-1 rounded-lg bg-cyanGlow/10 hover:bg-cyanGlow/20 text-cyanGlow border border-cyanGlow/20 text-[11px] font-mono font-bold transition-all">
+                        716qx (رمز: 7160)
+                    </button>
+                    <button onclick="window.SaaS.quickFill('vip-lounge', '1234')" class="px-2.5 py-1 rounded-lg bg-violetApex/10 hover:bg-violetApex/20 text-violetApex border border-violetApex/20 text-[11px] font-mono font-bold transition-all">
+                        vip-lounge (رمز: 1234)
+                    </button>
+                </div>
+            </div>
+
+            <button id="btn-login-submit" onclick="window.SaaS.login()" class="w-full py-3.5 glow-btn-cyan rounded-xl font-black text-black text-sm transition-all flex items-center justify-center gap-2">
+                تسجيل الدخول والبدء ➔
+            </button> 
+
+            <div class="pt-4 border-t border-white/5 text-center">
+                <button onclick="window.SaaS.openAdminPortal()" class="text-xs text-gray-400 hover:text-violetApex font-bold transition-colors">
+                    👑 لوحة تحكم الأدمن المركزي (SaaS Admin Portal)
+                </button>
+            </div>
+        </div> 
+    </div>
+
+    <!-- شاشة إيقاف أو تجميد اشتراك الصالة (Shop Blocked Overlay) -->
+    <div id="overlay-shop-blocked" class="fixed inset-0 bg-obsidian/95 backdrop-blur-2xl z-[600] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-roseAlert shadow-2xl text-center space-y-6"> 
+            <div class="w-20 h-20 mx-auto rounded-3xl bg-roseAlert/10 border border-roseAlert/30 flex items-center justify-center text-4xl animate-bounce">
+                🔒
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-white">الاشتراك مجمد مؤقتاً</h3> 
+                <p class="text-roseAlert text-sm font-bold" id="blocked-shop-name">هذه الصالة</p>
+                <p class="text-gray-400 text-xs leading-relaxed">
+                    تم تجميد أو إيقاف اشتراك هذه الصالة في المنصة السحابية. يرجى التواصل مع إدارة النظام لتجديد أو تفعيل الاشتراك.
+                </p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+                <button onclick="window.CloudDB.logoutShop()" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all flex items-center justify-center gap-2">
+                    🔄 تسجيل الخروج والتبديل لصالة أخرى
+                </button>
+                <button onclick="window.SaaS.openAdminPortal()" class="w-full py-3 rounded-xl bg-violetApex/20 hover:bg-violetApex text-violetApex hover:text-white font-bold text-xs transition-all border border-violetApex/30 flex items-center justify-center gap-2">
+                    👑 الدخول كمسؤول النظام (Admin)
+                </button>
+            </div>
+        </div> 
+    </div>
+
+    <!-- لوحة تحكم الأدمن المركزي (Central Admin Dashboard) -->
+    <div id="modal-admin-portal" class="fixed inset-0 bg-obsidian/90 backdrop-blur-xl z-[400] hidden flex items-center justify-center p-4 overflow-y-auto"> 
+        <div class="glass-card w-full max-w-4xl p-6 md:p-8 rounded-3xl relative border-t-4 border-violetApex shadow-2xl space-y-6 max-h-[90vh] flex flex-col"> 
+            <!-- Header -->
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violetApex to-cyanGlow flex items-center justify-center text-2xl">
+                        👑
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white">لوحة تحكم الأدمن المركزية (SaaS Admin Portal)</h3>
+                        <p class="text-xs text-gray-400 font-bold">إدارة اشتراكات الصالات وعزل البيانات وحالات التفعيل والتجميد</p>
+                    </div>
+                </div>
+                <button onclick="window.SaaS.closeAdminPortal()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors">✕</button>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="glass-card p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-gray-400 font-bold">إجمالي الصالات</div>
+                        <div id="admin-stat-total" class="text-2xl font-black text-white font-mono mt-1">0</div>
+                    </div>
+                    <span class="text-2xl">🏬</span>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-emeraldGlow font-bold">الصالات المفعلة</div>
+                        <div id="admin-stat-active" class="text-2xl font-black text-emeraldGlow font-mono mt-1">0</div>
+                    </div>
+                    <span class="text-2xl">✅</span>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-roseAlert font-bold">الصالات المجمدة</div>
+                        <div id="admin-stat-blocked" class="text-2xl font-black text-roseAlert font-mono mt-1">0</div>
+                    </div>
+                    <span class="text-2xl">⛔</span>
+                </div>
+            </div>
+
+            <!-- Actions Bar -->
+            <div class="flex justify-between items-center">
+                <h4 class="text-sm font-bold text-gray-300">قائمة الصالات وحالات الاشتراكات:</h4>
+                <div class="flex gap-2">
+                    <button onclick="window.SaaS.loadAdminShops()" class="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold transition-all flex items-center gap-1.5">
+                        <span>🔄</span> تحديث
+                    </button>
+                    <button onclick="window.SaaS.openAddShopModal()" class="px-4 py-2 rounded-xl glow-btn-primary text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-violetApex/30">
+                        <span>+</span> إضافة صالة جديدة
+                    </button>
+                </div>
+            </div>
+
+            <!-- Shops Table -->
+            <div class="flex-1 overflow-x-auto overflow-y-auto max-h-[380px] rounded-2xl border border-white/5 bg-panelDark/60">
+                <table class="w-full text-right border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-black/40 text-gray-400 font-bold border-b border-white/5 sticky top-0">
+                            <th class="p-4">معرّف الصالة (Tenant ID)</th>
+                            <th class="p-4">اسم الصالة</th>
+                            <th class="p-4">رمز الدخول</th>
+                            <th class="p-4">حالة الاشتراك</th>
+                            <th class="p-4">تاريخ الإنشاء</th>
+                            <th class="p-4">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-shops-tbody" class="divide-y divide-white/5">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div> 
+    </div>
+
+    <!-- نافذة إضافة صالة جديدة بالأدمن (Add Shop Modal) -->
+    <div id="modal-admin-add-shop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[550] hidden flex items-center justify-center p-4"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-violetApex space-y-5"> 
+            <button onclick="window.SaaS.closeAddShopModal()" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
+            <h3 class="text-xl font-black text-center text-white">إضافة صالة / عميل جديد</h3> 
+            <p class="text-gray-400 text-xs text-center">سيتم تخصيص معزول سحابي مستقل (Isolated Tenant) لهذه الصالة</p> 
+
+            <div class="space-y-4"> 
+                <div> 
+                    <label class="text-xs text-gray-300 font-bold block mb-1">معرّف الصالة (Tenant ID فريد بالإنجليزية):</label> 
+                    <input type="text" id="new-shop-id" placeholder="مثال: baghdad-lounge" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-mono text-white text-left font-bold" dir="ltr"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-300 font-bold block mb-1">اسم الصالة بالعربي:</label> 
+                    <input type="text" id="new-shop-name" placeholder="مثال: صالة بغداد للمنضدة والبلي" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold text-white"> 
+                </div> 
+                <div> 
+                    <label class="text-xs text-gray-300 font-bold block mb-1">رمز الدخول السري (Passcode):</label> 
+                    <input type="text" id="new-shop-passcode" placeholder="مثال: 5500" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-mono text-white text-left font-bold" dir="ltr"> 
+                </div> 
+            </div> 
+
+            <button onclick="window.SaaS.confirmAddShop()" class="w-full py-3.5 glow-btn-primary rounded-xl font-bold text-white text-sm">
+                حفظ وإنشاء الصالة بالسحابة
+            </button> 
+        </div> 
+    </div>
+
     <!-- استدعاء ملفات الجافاسكربت -->
     <script src="assets/js/effects.min.js"></script> 
+    <script src="assets/js/db.js"></script>
+    <script src="assets/js/saas.js"></script>
     <script src="assets/js/core.min.js"></script> 
 </body> 
 </html>
