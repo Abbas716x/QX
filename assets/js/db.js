@@ -8,8 +8,8 @@
         token: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTAyMDkyNDksImlkIjoiMDFhMGQwYmYtNWQwMS03NThhLTliMzYtMDRkN2MyZGY3NWM0Iiwia2lkIjoiUDdBZlZSS1ZQRnJONHBqSW5DazNlZ2ZQVS1MaHZLeWRFZGZwQ1pkUFh6USIsInJpZCI6IjMzNTk2ZjliLWRkY2EtNGFhYS04NjMxLTkzNzMyZDVlMDkwOSJ9.G4hd7ufwb6iAAz5NeOQqICY_qZ7KE5_qF_3aPeBWYLM8bbyHvgQqMW6ChK9EyHXH_pZagMMzFdCO6Ikuq7K2DA",
         stateKey: "lounge_os_data",
         adminPasscode: "admin716", // Master Admin PIN
-        pollIntervalMs: 10000,
-        debounceSaveMs: 800
+        pollIntervalMs: 6000,
+        debounceSaveMs: 400
     };
 
     const TENANT_STORAGE_KEY = "716QX_ACTIVE_TENANT";
@@ -67,6 +67,7 @@
             await executeQuery("CREATE TABLE IF NOT EXISTS shops (id TEXT PRIMARY KEY, name TEXT NOT NULL, passcode TEXT NOT NULL, status TEXT DEFAULT 'active', created_at INTEGER, updated_at INTEGER);");
             await executeQuery("CREATE TABLE IF NOT EXISTS app_state (tenant_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT, updated_at INTEGER, PRIMARY KEY (tenant_id, key));");
             await executeQuery("CREATE TABLE IF NOT EXISTS invoices (id TEXT NOT NULL, tenant_id TEXT NOT NULL, table_name TEXT, customer TEXT, subtotal REAL, early_paid REAL, discount REAL, final_total REAL, paid REAL, debt REAL, items TEXT, date TEXT, timestamp INTEGER, PRIMARY KEY (tenant_id, id));");
+            await executeQuery("CREATE TABLE IF NOT EXISTS activity_log (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id TEXT NOT NULL, action TEXT NOT NULL, detail TEXT, created_at INTEGER);");
         } catch(e) {
             console.warn("Schema initialization check:", e);
         }
@@ -298,6 +299,20 @@
         }
     }
 
+    // Log system & tenant activity
+    async function logActivity(action, detail, tenantId) {
+        try {
+            const tId = tenantId || (currentTenant ? currentTenant.id : 'system');
+            const nowSec = Math.floor(Date.now() / 1000);
+            await executeQuery(
+                "INSERT INTO activity_log (tenant_id, action, detail, created_at) VALUES (?, ?, ?, ?);",
+                [tId, action || 'عملية', detail || '', nowSec]
+            );
+        } catch(e) {
+            console.warn("Log activity error:", e);
+        }
+    }
+
     // Migrate old localStorage data for this tenant (one-time)
     async function migrateOldLocalStorage(tenantId, currentDb) {
         const migrationKey = `716QX_MIGRATED_${tenantId}`;
@@ -383,6 +398,9 @@
 
             setInterval(checkCloudUpdates, CONFIG.pollIntervalMs);
             window.addEventListener('focus', checkCloudUpdates);
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) checkCloudUpdates();
+            });
         },
 
         // Shop Login
@@ -417,6 +435,9 @@
             const tenantObj = { id: cleanId, name: name, passcode: cleanPass, status: status };
             saveActiveTenant(tenantObj);
 
+            // Log activity
+            logActivity('دخول صالة', `تسجيل الدخول إلى صالة ${name} (${cleanId})`, cleanId);
+
             // Hide login modal
             window.CloudDB.hideLoginModal();
             window.CloudDB.hideBlockedScreen();
@@ -438,12 +459,13 @@
             return tenantObj;
         },
 
-        // Logout / Switch Shop
+        // Logout / Switch Shop (direct action, confirmation handled by custom modal)
         logoutShop: function() {
-            if (confirm('هل أنت متأكد من تسجيل الخروج من الصالة الحالية؟')) {
-                saveActiveTenant(null);
-                location.reload();
+            if (currentTenant) {
+                logActivity('تسجيل خروج', `تسجيل الخروج من صالة ${currentTenant.name} (${currentTenant.id})`, currentTenant.id);
             }
+            saveActiveTenant(null);
+            location.reload();
         },
 
         // Save State
@@ -518,6 +540,10 @@
             if (b) b.classList.add('hidden');
         },
 
+        logActivity: function(action, detail, tenantId) {
+            return logActivity(action, detail, tenantId);
+        },
+
         // --- Central Admin Dashboard API ---
         adminAuth: function(inputPin) {
             return (inputPin || '').trim() === CONFIG.adminPasscode;
@@ -553,12 +579,16 @@
                 [cleanId, cleanName, cleanPass, nowSec, nowSec]
             );
 
+            await logActivity('إنشاء صالة جديدة', `تمت إضافة صالة: ${cleanName} (رمز: ${cleanId})`, cleanId);
             return { id: cleanId, name: cleanName, passcode: cleanPass, status: 'active' };
         },
 
         adminToggleShopStatus: async function(id, newStatus) {
             const nowSec = Math.floor(Date.now() / 1000);
             await executeQuery("UPDATE shops SET status = ?, updated_at = ? WHERE id = ?;", [newStatus, nowSec, id]);
+
+            const statusText = newStatus === 'blocked' ? 'تجميد الاشتراك' : 'تفعيل الاشتراك';
+            await logActivity('تغيير حالة الصالة', `تم ${statusText} للصالة (${id})`, id);
 
             // If toggling currently active shop, reflect immediately
             if (currentTenant && currentTenant.id === id) {
@@ -577,10 +607,59 @@
             await executeQuery("DELETE FROM app_state WHERE tenant_id = ?;", [id]);
             await executeQuery("DELETE FROM invoices WHERE tenant_id = ?;", [id]);
 
+            await logActivity('حذف صالة', `تم حذف الصالة (${id}) وجميع بياناتها وفواتيرها نهائياً`, id);
+
             if (currentTenant && currentTenant.id === id) {
                 saveActiveTenant(null);
                 location.reload();
             }
+        },
+
+        adminSwitchToShop: async function(id) {
+            const res = await executeQuery("SELECT id, name, passcode, status FROM shops WHERE id = ? LIMIT 1;", [id]);
+            if (res && res.rows && res.rows.length > 0) {
+                const row = res.rows[0];
+                const tenantObj = {
+                    id: row[0]?.value,
+                    name: row[1]?.value,
+                    passcode: row[2]?.value,
+                    status: row[3]?.value || 'active'
+                };
+                saveActiveTenant(tenantObj);
+                await logActivity('انتقال الأدمن', `انتقل الأدمن مباشرة إلى صالة: ${tenantObj.name} (${tenantObj.id})`, tenantObj.id);
+                return tenantObj;
+            }
+            throw new Error('الصالة غير موجودة في قاعدة البيانات');
+        },
+
+        adminGetActivityLogs: async function(tenantFilter = 'all', limit = 100) {
+            let sql = "SELECT id, tenant_id, action, detail, created_at FROM activity_log ";
+            let args = [];
+            if (tenantFilter && tenantFilter !== 'all') {
+                sql += "WHERE tenant_id = ? ";
+                args.push(tenantFilter);
+            }
+            sql += "ORDER BY created_at DESC, id DESC LIMIT ?;";
+            args.push(limit);
+
+            const res = await executeQuery(sql, args);
+            if (res && res.rows) {
+                return res.rows.map(r => {
+                    const sec = parseInt(r[4]?.value) || 0;
+                    return {
+                        id: r[0]?.value,
+                        tenantId: r[1]?.value,
+                        action: r[2]?.value,
+                        detail: r[3]?.value,
+                        createdAt: sec ? new Date(sec * 1000).toLocaleString('ar-IQ') : '-'
+                    };
+                });
+            }
+            return [];
+        },
+
+        adminClearActivityLogs: async function() {
+            await executeQuery("DELETE FROM activity_log;");
         }
     };
 })();

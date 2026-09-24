@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>716QX | لوحة تحكم الأدمن المركزي (SaaS)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <script>
+        (function() {
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+            document.addEventListener('keydown', function(e) {
+                if (
+                    e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || 
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's'))
+                ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#030307',
+                        cardDark: 'rgba(10, 10, 18, 0.82)',
+                        panelDark: '#07070d',
+                        cyanGlow: '#06B6D4',
+                        violetApex: '#8B5CF6',
+                        emeraldGlow: '#22C55E',
+                        roseAlert: '#F43F5E',
+                        amberWarn: '#F59E0B'
+                    },
+                    fontFamily: {
+                        ar: ['Tajawal', 'sans-serif'],
+                        en: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-violetApex/30 bg-[#030307] text-white">
+    <canvas id="interactive-canvas"></canvas>
+    <div class="ambient-aurora"></div>
+    <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex flex-col gap-2 pointer-events-none items-center"></div>
+
+    <!-- شاشة قفل الأدمن المحمية برمز السري admin716 -->
+    <div id="admin-auth-overlay" class="fixed inset-0 bg-obsidian/95 backdrop-blur-2xl z-[800] flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-violetApex shadow-2xl text-center space-y-6 animate__animated animate__zoomIn">
+            <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-violetApex to-cyanGlow flex items-center justify-center text-4xl shadow-xl shadow-violetApex/30">
+                👑
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-2xl font-black text-white font-ar">بوابة الأدمن المركزي</h2>
+                <p class="text-xs text-gray-400 font-ar leading-relaxed">
+                    منطقة محمية لإدارة كافة الصالات والاشتراكات السحابية. يرجى إدخال رمز الأدمن السري للمتابعة:
+                </p>
+            </div>
+
+            <div id="admin-auth-error" class="hidden p-3 rounded-xl bg-roseAlert/15 border border-roseAlert/30 text-roseAlert text-xs font-bold font-ar"></div>
+
+            <div class="space-y-2 text-right">
+                <label class="text-xs text-gray-300 font-bold block">رمز الأدمن السري (Admin PIN):</label>
+                <input type="password" id="input-admin-pin" placeholder="•••••••" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 outline-none focus:border-violetApex text-base font-mono text-center tracking-widest text-white font-bold" dir="ltr" onkeydown="if(event.key==='Enter') AdminApp.unlock();">
+            </div>
+
+            <div class="space-y-3 pt-2">
+                <button onclick="AdminApp.unlock()" class="w-full py-3.5 glow-btn-primary rounded-xl font-black text-white text-sm transition-all flex items-center justify-center gap-2 active:scale-95">
+                    🔓 فتح لوحة الإدارة ➔
+                </button>
+                <a href="index.html" class="block w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs font-bold transition-all text-center">
+                    العودة إلى واجهة الكاشير (POS) ↵
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- الواجهة الرئيسية للأدمن -->
+    <div id="admin-main-content" class="flex-1 flex flex-col hidden min-h-screen">
+        <!-- Top Navbar -->
+        <header class="glass-card border-b border-white/10 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-[100] backdrop-blur-xl">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violetApex to-cyanGlow flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-violetApex/30">
+                    👑
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-black text-white font-ar">لوحة تحكم الأدمن المركزية</h1>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violetApex/20 text-violetApex border border-violetApex/30 font-en uppercase">SaaS Controller</span>
+                    </div>
+                    <p class="text-xs text-cyanGlow font-bold">إدارة منظومة الصالات السحابية وعزل البيانات والفروع</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white text-xs font-bold transition-all flex items-center gap-2 border border-white/10">
+                    <span>🏪</span> الانتقال لواجهة الكاشير (POS)
+                </a>
+                <button onclick="AdminApp.lock()" class="px-4 py-2.5 rounded-xl bg-roseAlert/15 hover:bg-roseAlert text-roseAlert hover:text-white text-xs font-bold transition-all flex items-center gap-2 border border-roseAlert/30">
+                    <span>🔒</span> قفل الأدمن
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-3xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-gray-400 font-bold block mb-1">إجمالي الصالات المسجلة</span>
+                        <span id="kpi-total-shops" class="text-3xl font-black text-white font-en">0</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-violetApex/10 text-violetApex flex items-center justify-center text-2xl border border-violetApex/20">
+                        🏬
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-3xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-emeraldGlow font-bold block mb-1">الصالات المفعلة النشطة</span>
+                        <span id="kpi-active-shops" class="text-3xl font-black text-emeraldGlow font-en">0</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-emeraldGlow/10 text-emeraldGlow flex items-center justify-center text-2xl border border-emeraldGlow/20">
+                        ✅
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-3xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-roseAlert font-bold block mb-1">الصالات المجمدة مؤقتاً</span>
+                        <span id="kpi-blocked-shops" class="text-3xl font-black text-roseAlert font-en">0</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-roseAlert/10 text-roseAlert flex items-center justify-center text-2xl border border-roseAlert/20">
+                        ⛔
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-3xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-cyanGlow font-bold block mb-1">إجمالي الحركات المسجلة</span>
+                        <span id="kpi-total-logs" class="text-3xl font-black text-cyanGlow font-en">0</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-cyanGlow/10 text-cyanGlow flex items-center justify-center text-2xl border border-cyanGlow/20">
+                        📜
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex gap-2 border-b border-white/10 pb-2">
+                <button id="tab-btn-shops" onclick="AdminApp.switchTab('shops')" class="px-5 py-3 rounded-2xl font-bold text-xs transition-all flex items-center gap-2 bg-violetApex text-white shadow-lg shadow-violetApex/30">
+                    <span>🏬</span> إدارة الصالات والفروع
+                </button>
+                <button id="tab-btn-logs" onclick="AdminApp.switchTab('logs')" class="px-5 py-3 rounded-2xl font-bold text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2">
+                    <span>📜</span> سجل الحركات السحابي (Activity Log)
+                </button>
+            </div>
+
+            <!-- TAB 1: Shops Management -->
+            <section id="tab-content-shops" class="space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-black text-white">قائمة الصالات والاشتراكات</h2>
+                        <p class="text-xs text-gray-400">تحكم بالصالات، تفعيل أو تجميد الاشتراكات، والانتقال الفوري للصالة</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <input type="text" id="search-shops" oninput="AdminApp.filterShops(this.value)" placeholder="بحث عن صالة أو رمز..." class="w-full bg-panelDark border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyanGlow">
+                        </div>
+                        <button onclick="AdminApp.loadShops()" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 border border-white/10" title="تحديث القائمة">
+                            <span>🔄</span>
+                        </button>
+                        <button onclick="AdminApp.openAddShopModal()" class="px-4 py-2.5 rounded-xl glow-btn-primary text-white text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-violetApex/30 shrink-0">
+                            <span>+</span> إضافة صالة جديدة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Shops Table Card -->
+                <div class="glass-card rounded-3xl border border-white/10 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-black/40 text-gray-400 font-bold border-b border-white/10">
+                                    <th class="p-4">معرّف الصالة (ID)</th>
+                                    <th class="p-4">اسم الصالة</th>
+                                    <th class="p-4">رمز الدخول (Passcode)</th>
+                                    <th class="p-4">حالة الاشتراك</th>
+                                    <th class="p-4">تاريخ الإنشاء</th>
+                                    <th class="p-4 text-center">الإجراءات والتحكم</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-shops-tbody" class="divide-y divide-white/5">
+                                <tr>
+                                    <td colspan="6" class="text-center py-12 text-gray-500 font-bold">جاري تحميل الصالات من السحابة...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Activity Log -->
+            <section id="tab-content-logs" class="space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-black text-white">سجل العمليات والحركات السحابي</h2>
+                        <p class="text-xs text-gray-400">مراقبة العمليات الحساسة (دخول صالات، تصفير مبيعات، تسديد ديون، تعديلات)</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="log-tenant-filter" onchange="AdminApp.loadLogs()" class="bg-panelDark border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-cyanGlow font-bold">
+                            <option value="all">كافة الصالات</option>
+                        </select>
+                        <button onclick="AdminApp.loadLogs()" class="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10">
+                            <span>🔄</span> تحديث
+                        </button>
+                        <button onclick="AdminApp.clearLogs()" class="px-3.5 py-2.5 rounded-xl bg-roseAlert/15 hover:bg-roseAlert text-roseAlert hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-roseAlert/30">
+                            <span>🗑</span> مسح السجل
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Activity Log Table Card -->
+                <div class="glass-card rounded-3xl border border-white/10 overflow-hidden">
+                    <div class="overflow-x-auto max-h-[550px] overflow-y-auto">
+                        <table class="w-full text-right border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-black/40 text-gray-400 font-bold border-b border-white/10 sticky top-0 backdrop-blur-md">
+                                    <th class="p-4">الوقت والتاريخ</th>
+                                    <th class="p-4">رمز الصالة (Tenant)</th>
+                                    <th class="p-4">نوع العملية</th>
+                                    <th class="p-4">التفاصيل الكاملة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-logs-tbody" class="divide-y divide-white/5">
+                                <tr>
+                                    <td colspan="4" class="text-center py-12 text-gray-500 font-bold">جاري تحميل سجل الحركات...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- نافذة إضافة صالة جديدة (Add Shop Modal) -->
+    <div id="modal-admin-add-shop" class="fixed inset-0 bg-obsidian/90 backdrop-blur-xl z-[900] hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 sm:p-8 rounded-3xl relative border-t-4 border-violetApex shadow-2xl space-y-5 animate__animated animate__zoomIn animate__faster">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🏬</span>
+                    <h3 class="text-lg font-black text-white font-ar">إضافة صالة / عميل جديد</h3>
+                </div>
+                <button onclick="AdminApp.closeAddShopModal()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center">✕</button>
+            </div>
+            <p class="text-gray-400 text-xs leading-relaxed">
+                سيتم إنشاء بيئة سحابية معزولة تماماً (Multi-Tenant Isolation) خاصة بهذه الصالة.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-300 font-bold block mb-1">معرّف الصالة الفريد (Shop ID بالإنجليزية):</label>
+                    <input type="text" id="new-shop-id" placeholder="مثال: baghdad-lounge" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr">
+                    <span class="text-[10px] text-gray-500 mt-1 block">أحرف وأرقام إنجليزية وشرطات فقط</span>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-300 font-bold block mb-1">اسم الصالة بالعربي:</label>
+                    <input type="text" id="new-shop-name" placeholder="مثال: صالة بغداد للمنضدة والبليارد" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold text-white">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-300 font-bold block mb-1">رمز الدخول السري (Passcode / PIN):</label>
+                    <input type="text" id="new-shop-passcode" placeholder="مثال: 5500" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-mono text-white text-left font-bold" dir="ltr">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="AdminApp.closeAddShopModal()" class="flex-1 py-3 rounded-xl font-bold text-xs text-gray-300 bg-white/5 hover:bg-white/10 transition-all border border-white/10">
+                    إلغاء
+                </button>
+                <button onclick="AdminApp.confirmAddShop()" class="flex-1 py-3 glow-btn-primary rounded-xl font-bold text-xs text-white transition-all shadow-lg shadow-violetApex/30">
+                    حفظ وإنشاء الصالة ➔
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/effects.min.js"></script>
+    <script src="assets/js/db.js"></script>
+    <script src="assets/js/saas.js"></script>
+
+    <script>
+        const AdminApp = {
+            allShops: [],
+            activeTab: 'shops',
+
+            init: function() {
+                const isAuthed = sessionStorage.getItem('716QX_ADMIN_AUTH') === 'true';
+                if (isAuthed) {
+                    this.showMain();
+                } else {
+                    document.getElementById('admin-auth-overlay').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('input-admin-pin')?.focus(), 100);
+                }
+            },
+
+            unlock: function() {
+                const pin = document.getElementById('input-admin-pin').value;
+                const errEl = document.getElementById('admin-auth-error');
+
+                if (window.CloudDB.adminAuth(pin)) {
+                    sessionStorage.setItem('716QX_ADMIN_AUTH', 'true');
+                    if (errEl) errEl.classList.add('hidden');
+                    this.showMain();
+                    window.showToast('تم التحقق بنجاح! مرحباً بك في لوحة تحكم الأدمن', 'success');
+                } else {
+                    if (errEl) {
+                        errEl.innerText = 'رمز الأدمن السري غير صحيح. يرجى المحاولة مجدداً';
+                        errEl.classList.remove('hidden');
+                    }
+                    if (window.AudioEngine && window.AudioEngine.play) window.AudioEngine.play('error');
+                }
+            },
+
+            lock: function() {
+                sessionStorage.removeItem('716QX_ADMIN_AUTH');
+                location.reload();
+            },
+
+            showMain: function() {
+                document.getElementById('admin-auth-overlay').classList.add('hidden');
+                document.getElementById('admin-main-content').classList.remove('hidden');
+                this.loadShops();
+                this.loadLogs();
+            },
+
+            switchTab: function(tab) {
+                this.activeTab = tab;
+                const btnShops = document.getElementById('tab-btn-shops');
+                const btnLogs = document.getElementById('tab-btn-logs');
+                const secShops = document.getElementById('tab-content-shops');
+                const secLogs = document.getElementById('tab-content-logs');
+
+                if (tab === 'shops') {
+                    btnShops.className = 'px-5 py-3 rounded-2xl font-bold text-xs transition-all flex items-center gap-2 bg-violetApex text-white shadow-lg shadow-violetApex/30';
+                    btnLogs.className = 'px-5 py-3 rounded-2xl font-bold text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2';
+                    secShops.classList.remove('hidden');
+                    secLogs.classList.add('hidden');
+                } else {
+                    btnLogs.className = 'px-5 py-3 rounded-2xl font-bold text-xs transition-all flex items-center gap-2 bg-violetApex text-white shadow-lg shadow-violetApex/30';
+                    btnShops.className = 'px-5 py-3 rounded-2xl font-bold text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2';
+                    secLogs.classList.remove('hidden');
+                    secShops.classList.add('hidden');
+                    this.loadLogs();
+                }
+            },
+
+            loadShops: async function() {
+                const tbody = document.getElementById('admin-shops-tbody');
+                try {
+                    const shops = await window.CloudDB.adminGetShops();
+                    this.allShops = shops;
+                    this.renderShops(shops);
+                    this.updateKPIs(shops);
+                    this.populateFilterDropdown(shops);
+                } catch(e) {
+                    console.error("Load shops error:", e);
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-roseAlert font-bold">فشل الاتصال بالسحابة لجلب الصالات: ${e.message}</td></tr>`;
+                }
+            },
+
+            renderShops: function(shops) {
+                const tbody = document.getElementById('admin-shops-tbody');
+                if (!tbody) return;
+
+                if (!shops || shops.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-gray-500 font-bold">لا توجد صالات مسجلة حتى الآن. يمكنك إضافة صالة جديدة من الزر أعلاه.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = shops.map(s => {
+                    const isBlocked = s.status === 'blocked';
+                    return `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="p-4 font-mono font-bold text-cyanGlow text-left" dir="ltr">${s.id}</td>
+                            <td class="p-4 font-bold text-white text-base">${s.name}</td>
+                            <td class="p-4 font-mono text-gray-300 text-left" dir="ltr">${s.passcode}</td>
+                            <td class="p-4">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold ${isBlocked ? 'bg-roseAlert/15 text-roseAlert border border-roseAlert/30' : 'bg-emeraldGlow/15 text-emeraldGlow border border-emeraldGlow/30'}">
+                                    ${isBlocked ? '⛔ مجمد' : '✅ نشط'}
+                                </span>
+                            </td>
+                            <td class="p-4 text-gray-400 font-mono text-[11px]">${s.createdAt}</td>
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="AdminApp.switchToShop('${s.id}')" class="px-3 py-1.5 rounded-lg bg-cyanGlow/15 hover:bg-cyanGlow text-cyanGlow hover:text-black font-bold text-xs transition-all border border-cyanGlow/30 flex items-center gap-1" title="فتح واجهة الكاشير لهذه الصالة">
+                                        <span>🏪</span> دخول
+                                    </button>
+                                    <button onclick="AdminApp.toggleStatus('${s.id}', '${s.status}')" class="px-3 py-1.5 rounded-lg ${isBlocked ? 'bg-emeraldGlow/15 text-emeraldGlow hover:bg-emeraldGlow hover:text-black border-emeraldGlow/30' : 'bg-amberWarn/15 text-amberWarn hover:bg-amberWarn hover:text-black border-amberWarn/30'} font-bold text-xs transition-all border">
+                                        ${isBlocked ? 'تفعيل' : 'تجميد'}
+                                    </button>
+                                    <button onclick="AdminApp.deleteShop('${s.id}', '${s.name}')" class="p-1.5 rounded-lg bg-roseAlert/10 hover:bg-roseAlert text-roseAlert hover:text-white transition-all text-xs border border-roseAlert/20" title="حذف نهائي">
+                                        🗑
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            },
+
+            filterShops: function(q) {
+                const query = (q || '').trim().toLowerCase();
+                const filtered = this.allShops.filter(s => 
+                    s.id.toLowerCase().includes(query) || 
+                    s.name.toLowerCase().includes(query) ||
+                    s.passcode.toLowerCase().includes(query)
+                );
+                this.renderShops(filtered);
+            },
+
+            updateKPIs: function(shops) {
+                const total = shops.length;
+                const active = shops.filter(s => s.status !== 'blocked').length;
+                const blocked = shops.filter(s => s.status === 'blocked').length;
+
+                document.getElementById('kpi-total-shops').innerText = total;
+                document.getElementById('kpi-active-shops').innerText = active;
+                document.getElementById('kpi-blocked-shops').innerText = blocked;
+            },
+
+            populateFilterDropdown: function(shops) {
+                const sel = document.getElementById('log-tenant-filter');
+                if (!sel) return;
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="all">كافة الصالات</option>' + 
+                    shops.map(s => `<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+                sel.value = currentVal;
+            },
+
+            openAddShopModal: function() {
+                document.getElementById('new-shop-id').value = '';
+                document.getElementById('new-shop-name').value = '';
+                document.getElementById('new-shop-passcode').value = '';
+                document.getElementById('modal-admin-add-shop').classList.remove('hidden');
+                setTimeout(() => document.getElementById('new-shop-id').focus(), 50);
+            },
+
+            closeAddShopModal: function() {
+                document.getElementById('modal-admin-add-shop').classList.add('hidden');
+            },
+
+            confirmAddShop: async function() {
+                const id = document.getElementById('new-shop-id').value.trim();
+                const name = document.getElementById('new-shop-name').value.trim();
+                const passcode = document.getElementById('new-shop-passcode').value.trim();
+
+                if (!id || !name || !passcode) {
+                    return window.showToast('يرجى ملء جميع الحقول المطلوبة بدقة', 'error');
+                }
+
+                try {
+                    await window.CloudDB.adminCreateShop(id, name, passcode);
+                    this.closeAddShopModal();
+                    await this.loadShops();
+                    window.showToast(`تم إنشاء صالة (${name}) بنجاح ✓`, 'success');
+                } catch(e) {
+                    window.showToast(e.message || 'فشل إنشاء الصالة', 'error');
+                }
+            },
+
+            toggleStatus: async function(id, curStatus) {
+                const newStatus = curStatus === 'blocked' ? 'active' : 'blocked';
+                const actionWord = newStatus === 'blocked' ? 'تجميد' : 'تفعيل';
+
+                const confirmed = await window.showConfirmModal({
+                    title: `${actionWord} الصالة`,
+                    message: `هل أنت متأكد من رغبتك في ${actionWord} اشتراك الصالة (${id})؟`,
+                    confirmText: `نعم، ${actionWord}`,
+                    isDestructive: newStatus === 'blocked'
+                });
+
+                if (!confirmed) return;
+
+                try {
+                    await window.CloudDB.adminToggleShopStatus(id, newStatus);
+                    await this.loadShops();
+                    window.showToast(`تم ${actionWord} الصالة بنجاح`, 'success');
+                } catch(e) {
+                    window.showToast('فشل تعديل حالة الصالة: ' + e.message, 'error');
+                }
+            },
+
+            deleteShop: async function(id, name) {
+                const confirmed = await window.showConfirmModal({
+                    title: 'حذف الصالة نهائياً',
+                    message: `تحذير شديد الأهمية: هل أنت متأكد من حذف الصالة (${name})؟ سيتم مسح كافة الطاولات والفواتير والبيانات السحابية التابعة لها نهائياً ولا يمكن التراجع!`,
+                    confirmText: 'نعم، حذف الصالة نهائياً',
+                    isDestructive: true
+                });
+
+                if (!confirmed) return;
+
+                try {
+                    await window.CloudDB.adminDeleteShop(id);
+                    await this.loadShops();
+                    window.showToast(`تم حذف الصالة (${name}) بنجاح`, 'success');
+                } catch(e) {
+                    window.showToast('فشل حذف الصالة: ' + e.message, 'error');
+                }
+            },
+
+            switchToShop: async function(id) {
+                try {
+                    const tenant = await window.CloudDB.adminSwitchToShop(id);
+                    window.showToast(`جاري الانتقال إلى صالة ${tenant.name}...`, 'success');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 500);
+                } catch(e) {
+                    window.showToast('فشل الانتقال إلى الصالة: ' + e.message, 'error');
+                }
+            },
+
+            loadLogs: async function() {
+                const tbody = document.getElementById('admin-logs-tbody');
+                const filter = document.getElementById('log-tenant-filter')?.value || 'all';
+
+                try {
+                    const logs = await window.CloudDB.adminGetActivityLogs(filter, 150);
+                    document.getElementById('kpi-total-logs').innerText = logs.length;
+
+                    if (!tbody) return;
+
+                    if (logs.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-12 text-gray-500 font-bold">لا توجد حركات مسجلة حتى الآن.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = logs.map(l => {
+                        let actionBadgeColor = 'bg-cyanGlow/10 text-cyanGlow border-cyanGlow/20';
+                        if (l.action.includes('حذف') || l.action.includes('تجميد')) {
+                            actionBadgeColor = 'bg-roseAlert/15 text-roseAlert border-roseAlert/30';
+                        } else if (l.action.includes('إنشاء') || l.action.includes('تفعيل') || l.action.includes('تسديد')) {
+                            actionBadgeColor = 'bg-emeraldGlow/15 text-emeraldGlow border-emeraldGlow/30';
+                        } else if (l.action.includes('تصفير')) {
+                            actionBadgeColor = 'bg-amberWarn/15 text-amberWarn border-amberWarn/30';
+                        }
+
+                        return `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 text-gray-400 font-mono text-[11px] whitespace-nowrap">${l.createdAt}</td>
+                                <td class="p-4 font-mono font-bold text-violetApex">${l.tenantId}</td>
+                                <td class="p-4">
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${actionBadgeColor}">
+                                        ${l.action}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-gray-200 text-xs font-ar">${l.detail}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } catch(e) {
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-roseAlert font-bold">فشل جلب سجل الحركات: ${e.message}</td></tr>`;
+                }
+            },
+
+            clearLogs: async function() {
+                const confirmed = await window.showConfirmModal({
+                    title: 'مسح سجل الحركات',
+                    message: 'هل أنت متأكد من رغبتك بمسح كافة سجلات الحركات والعمليات السابقة؟',
+                    confirmText: 'نعم، مسح السجل',
+                    isDestructive: true
+                });
+
+                if (!confirmed) return;
+
+                try {
+                    await window.CloudDB.adminClearActivityLogs();
+                    await this.loadLogs();
+                    window.showToast('تم مسح سجل الحركات بنجاح', 'success');
+                } catch(e) {
+                    window.showToast('فشل مسح السجل: ' + e.message, 'error');
+                }
+            }
+        };
+
+        window.AdminApp = AdminApp;
+        document.addEventListener('DOMContentLoaded', () => AdminApp.init());
+    </script>
+</body>
+</html>

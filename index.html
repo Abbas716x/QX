@@ -86,16 +86,13 @@
         <div class="pt-6 border-t border-white/5 space-y-3"> 
             <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
                 <div class="text-[10px] text-gray-400 font-bold">الصالة النشطة حالياً:</div>
-                <div id="drawer-shop-name" class="text-sm font-black text-white">صالة 716QX الرئيسية</div>
-                <div id="drawer-shop-code" class="text-xs text-cyanGlow font-mono">رمز: 716qx</div>
+                <div id="drawer-shop-name" class="text-sm font-black text-white">جاري الاتصال...</div>
+                <div id="drawer-shop-code" class="text-xs text-cyanGlow font-mono">رمز: ---</div>
             </div>
-            <button onclick="window.CloudDB.logoutShop()" class="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+            <button onclick="window.SaaS.requestLogout()" class="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center justify-center gap-2 transition-all border border-white/5">
                 <span>🔄</span> تبديل الصالة / خروج
             </button>
-            <button onclick="window.SaaS.openAdminPortal()" class="w-full p-3 rounded-xl bg-violetApex/15 hover:bg-violetApex text-violetApex hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all border border-violetApex/30">
-                <span>👑</span> لوحة تحكم الأدمن
-            </button>
-            <button onclick="if(confirm('هل أنت متأكد من رغبتك بإعادة ضبط النظام بالكامل وحذف كافة السجلات؟')) window.resetSystemFull()" class="w-full p-3.5 rounded-2xl bg-roseAlert/10 text-roseAlert border border-roseAlert/20 font-bold hover:bg-roseAlert hover:text-white transition-all text-xs flex items-center justify-center gap-2"> 
+            <button onclick="window.SaaS.requestResetSystem()" class="w-full p-3.5 rounded-2xl bg-roseAlert/10 text-roseAlert border border-roseAlert/20 font-bold hover:bg-roseAlert hover:text-white transition-all text-xs flex items-center justify-center gap-2"> 
                 ⚠️ إعادة ضبط المصنع للنظام 
             </button> 
         </div> 
@@ -299,7 +296,7 @@
                     <div class="flex flex-col gap-3"> 
                         <button onclick="window.openCheckoutModal()" class="w-full py-4 glow-btn-primary rounded-xl font-black text-base flex items-center justify-center gap-2 text-white"> ✅ إغلاق الحساب / تحويل دين </button> 
                         <button onclick="window.openTransferModal()" class="w-full py-3 glass-card rounded-xl font-bold hover:bg-white/10 transition-all text-xs"> ⇄ نقل أو دمج مع طاولة أخرى </button> 
-                        <button onclick="if(confirm('هل أنت متأكد من حذف هذه الطاولة وإلغائها؟')) window.deleteTable()" class="w-full py-2 text-gray-500 rounded-xl font-bold hover:text-roseAlert transition-all text-xs underline decoration-white/10"> إلغاء الطاولة وحذفها </button> 
+                        <button onclick="window.requestDeleteTable()" class="w-full py-2 text-gray-500 rounded-xl font-bold hover:text-roseAlert transition-all text-xs underline decoration-white/10"> إلغاء الطاولة وحذفها </button> 
                     </div> 
                 </div> 
             </div> 
@@ -310,7 +307,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"> 
                 <div> 
                     <h2 class="text-3xl font-black">سجل الديون والحسابات الآجلة</h2> 
-                    <p class="text-gray-400 text-xs md:text-sm mt-1">متابعة وتسديد ديون الزبائن بشكل كلي أو جزئي</p> 
+                    <p class="text-gray-400 text-xs md:text-sm mt-1">متابعة وتسديد وتعديل ديون الزبائن وعرض كشوفات الحسابات</p> 
                 </div> 
                 <div class="flex gap-3 w-full md:w-auto"> 
                     <input type="text" id="search-debts" onkeyup="window.renderDebtsList()" placeholder="ابحث باسم المدين..." class="w-full md:w-80 bg-panelDark/80 border border-white/10 rounded-2xl px-5 py-3.5 outline-none focus:border-roseAlert transition-all text-sm"> 
@@ -328,7 +325,7 @@
                 </div> 
                 <div class="flex gap-3"> 
                     <button onclick="window.exportInvoicesCSV()" class="px-5 py-3 rounded-xl bg-emeraldGlow/10 text-emeraldGlow font-bold hover:bg-emeraldGlow hover:text-black transition-all text-xs border border-emeraldGlow/20 flex items-center gap-2"> 📊 تصدير Excel </button> 
-                    <button onclick="if(confirm('هل أنت متأكد من مسح كامل أرشيف الفواتير؟')) window.clearAllInvoices()" class="px-5 py-3 rounded-xl bg-roseAlert/10 text-roseAlert font-bold hover:bg-roseAlert hover:text-white transition-all text-xs border border-roseAlert/20"> 🗑 مسح الأرشيف </button> 
+                    <button onclick="window.requestClearInvoices()" class="px-5 py-3 rounded-xl bg-roseAlert/10 text-roseAlert font-bold hover:bg-roseAlert hover:text-white transition-all text-xs border border-roseAlert/20"> 🗑 مسح الأرشيف </button> 
                 </div> 
             </div> 
             <div class="glass-card rounded-3xl overflow-hidden border border-white/5"> 
@@ -530,182 +527,205 @@
         </div> 
     </div>
 
-    <!-- نافذة تسجيل الدخول إلى الصالة (Shop Login Modal) -->
+    <!-- نافذة تسجيل الدخول إلى الصالة (Shop Login Modal - SaaS Clean) -->
     <div id="modal-shop-login" class="fixed inset-0 bg-obsidian/95 backdrop-blur-2xl z-[500] hidden flex items-center justify-center p-4"> 
         <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-cyanGlow shadow-2xl space-y-6 animate__animated animate__fadeIn"> 
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-cyanGlow to-violetApex flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-cyanGlow/20">
                     🏪
                 </div>
-                <h3 class="text-2xl font-black text-white">دخول الصالة السحابية</h3> 
-                <p class="text-gray-400 text-xs">أدخل رمز الصالة ورمز الدخول الخاص بك للربط السحابي (Multi-Tenant SaaS)</p> 
+                <h3 class="text-2xl font-black text-white font-ar">دخول الصالة السحابية</h3> 
+                <p class="text-gray-400 text-xs font-ar leading-relaxed">أدخل رمز الصالة ورمز المرور الخاص بك للمزامنة السحابية الفورية</p> 
             </div>
 
-            <div id="login-err-msg" class="hidden p-3 rounded-xl bg-roseAlert/15 border border-roseAlert/30 text-roseAlert text-xs font-bold text-center"></div>
+            <div id="login-err-msg" class="hidden p-3 rounded-xl bg-roseAlert/15 border border-roseAlert/30 text-roseAlert text-xs font-bold text-center font-ar"></div>
 
             <div class="space-y-4"> 
                 <div> 
                     <label class="text-xs text-gray-300 font-bold block mb-1">معرّف / رمز الصالة (Shop ID):</label> 
-                    <input type="text" id="login-shop-id" placeholder="مثال: 716qx" value="716qx" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr"> 
+                    <input type="text" id="login-shop-id" placeholder="أدخل رمز الصالة الخاص بك" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr"> 
                 </div> 
                 <div> 
                     <label class="text-xs text-gray-300 font-bold block mb-1">رمز المرور السري (Passcode / PIN):</label> 
-                    <input type="password" id="login-shop-passcode" placeholder="مثال: 7160" value="7160" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr"> 
+                    <input type="password" id="login-shop-passcode" placeholder="••••••••" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 outline-none focus:border-cyanGlow text-sm font-mono text-white text-left font-bold" dir="ltr" onkeydown="if(event.key==='Enter') window.SaaS.login();"> 
                 </div> 
             </div> 
 
-            <!-- Quick Login Hints for Easy Testing -->
-            <div class="p-3 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                <div class="text-[10px] text-gray-400 font-bold">صالات تجريبية سريعة:</div>
-                <div class="flex gap-2 flex-wrap">
-                    <button onclick="window.SaaS.quickFill('716qx', '7160')" class="px-2.5 py-1 rounded-lg bg-cyanGlow/10 hover:bg-cyanGlow/20 text-cyanGlow border border-cyanGlow/20 text-[11px] font-mono font-bold transition-all">
-                        716qx (رمز: 7160)
-                    </button>
-                    <button onclick="window.SaaS.quickFill('vip-lounge', '1234')" class="px-2.5 py-1 rounded-lg bg-violetApex/10 hover:bg-violetApex/20 text-violetApex border border-violetApex/20 text-[11px] font-mono font-bold transition-all">
-                        vip-lounge (رمز: 1234)
-                    </button>
-                </div>
-            </div>
-
-            <button id="btn-login-submit" onclick="window.SaaS.login()" class="w-full py-3.5 glow-btn-cyan rounded-xl font-black text-black text-sm transition-all flex items-center justify-center gap-2">
+            <button id="btn-login-submit" onclick="window.SaaS.login()" class="w-full py-3.5 glow-btn-cyan rounded-xl font-black text-black text-sm transition-all flex items-center justify-center gap-2 active:scale-95">
                 تسجيل الدخول والبدء ➔
             </button> 
-
-            <div class="pt-4 border-t border-white/5 text-center">
-                <button onclick="window.SaaS.openAdminPortal()" class="text-xs text-gray-400 hover:text-violetApex font-bold transition-colors">
-                    👑 لوحة تحكم الأدمن المركزي (SaaS Admin Portal)
-                </button>
-            </div>
         </div> 
     </div>
 
     <!-- شاشة إيقاف أو تجميد اشتراك الصالة (Shop Blocked Overlay) -->
     <div id="overlay-shop-blocked" class="fixed inset-0 bg-obsidian/95 backdrop-blur-2xl z-[600] hidden flex items-center justify-center p-4"> 
-        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-roseAlert shadow-2xl text-center space-y-6"> 
+        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-roseAlert shadow-2xl text-center space-y-6 animate__animated animate__zoomIn"> 
             <div class="w-20 h-20 mx-auto rounded-3xl bg-roseAlert/10 border border-roseAlert/30 flex items-center justify-center text-4xl animate-bounce">
                 🔒
             </div>
             <div class="space-y-2">
-                <h3 class="text-2xl font-black text-white">الاشتراك مجمد مؤقتاً</h3> 
+                <h3 class="text-2xl font-black text-white font-ar">الاشتراك مجمد مؤقتاً</h3> 
                 <p class="text-roseAlert text-sm font-bold" id="blocked-shop-name">هذه الصالة</p>
-                <p class="text-gray-400 text-xs leading-relaxed">
+                <p class="text-gray-400 text-xs leading-relaxed font-ar">
                     تم تجميد أو إيقاف اشتراك هذه الصالة في المنصة السحابية. يرجى التواصل مع إدارة النظام لتجديد أو تفعيل الاشتراك.
                 </p>
             </div>
 
-            <div class="space-y-3 pt-2">
-                <button onclick="window.CloudDB.logoutShop()" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all flex items-center justify-center gap-2">
+            <div class="pt-2">
+                <button onclick="window.CloudDB.logoutShop()" class="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all flex items-center justify-center gap-2">
                     🔄 تسجيل الخروج والتبديل لصالة أخرى
                 </button>
-                <button onclick="window.SaaS.openAdminPortal()" class="w-full py-3 rounded-xl bg-violetApex/20 hover:bg-violetApex text-violetApex hover:text-white font-bold text-xs transition-all border border-violetApex/30 flex items-center justify-center gap-2">
-                    👑 الدخول كمسؤول النظام (Admin)
+            </div>
+        </div> 
+    </div>
+
+    <!-- نافذة تعديل الدين ودفعات الحساب (Debt Adjustment Modal) -->
+    <div id="modal-debt-adjust" class="fixed inset-0 bg-obsidian/90 backdrop-blur-xl z-[500] hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 sm:p-8 rounded-3xl relative border-t-4 border-cyanGlow shadow-2xl space-y-5 animate__animated animate__zoomIn animate__faster">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">💳</span>
+                    <div>
+                        <h3 class="text-lg font-black text-white font-ar">تعديل حساب الزبون والدفعات</h3>
+                        <span id="debt-adjust-customer" class="text-xs text-cyanGlow font-bold">اسم الزبون</span>
+                    </div>
+                </div>
+                <button onclick="window.closeModal('modal-debt-adjust')" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center">✕</button>
+            </div>
+
+            <!-- Current Balance Display -->
+            <div class="bg-panelDark/90 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+                <span class="text-xs text-gray-400 font-bold">إجمالي الدين الحالي:</span>
+                <span id="debt-adjust-current-balance" class="text-xl font-black font-en text-roseAlert">0 IQD</span>
+            </div>
+
+            <!-- Action Selector -->
+            <div class="grid grid-cols-3 gap-2 p-1 bg-black/40 rounded-xl border border-white/5 text-[11px] font-bold text-center">
+                <button id="debt-tab-payment" onclick="window.setDebtActionMode('payment')" class="py-2 rounded-lg bg-emeraldGlow/20 text-emeraldGlow border border-emeraldGlow/30 transition-all">
+                    تسديد دفعة
+                </button>
+                <button id="debt-tab-add" onclick="window.setDebtActionMode('add')" class="py-2 rounded-lg text-gray-400 hover:text-white transition-all">
+                    إضافة دين
+                </button>
+                <button id="debt-tab-set" onclick="window.setDebtActionMode('set')" class="py-2 rounded-lg text-gray-400 hover:text-white transition-all">
+                    تعديل الرصيد
                 </button>
             </div>
-        </div> 
+
+            <!-- Input Fields -->
+            <div class="space-y-4">
+                <div>
+                    <label id="debt-adjust-amount-label" class="text-xs text-gray-300 font-bold block mb-1">مبلغ الدفعة المسددة (IQD):</label>
+                    <input type="number" id="debt-adjust-amount" placeholder="مثال: 5000" class="w-full bg-panelDark border border-white/10 rounded-xl p-3.5 outline-none focus:border-cyanGlow text-base font-en font-black text-white" min="0">
+                </div>
+
+                <div id="debt-adjust-quick-chips" class="flex gap-2 flex-wrap">
+                    <button onclick="document.getElementById('debt-adjust-amount').value = 1000" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-[11px] font-en font-bold">+1,000</button>
+                    <button onclick="document.getElementById('debt-adjust-amount').value = 2000" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-[11px] font-en font-bold">+2,000</button>
+                    <button onclick="document.getElementById('debt-adjust-amount').value = 5000" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-[11px] font-en font-bold">+5,000</button>
+                    <button onclick="document.getElementById('debt-adjust-amount').value = 10000" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-[11px] font-en font-bold">+10,000</button>
+                    <button onclick="window.fillFullDebtAmount()" class="px-2.5 py-1 rounded-lg bg-emeraldGlow/15 text-emeraldGlow text-[11px] font-bold">تسديد كامل الدين</button>
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-400 font-bold block mb-1">ملاحظات / سبب التعديل (اختياري):</label>
+                    <input type="text" id="debt-adjust-note" placeholder="مثال: دفعة نقدية باليد أو طلب إضافي" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-cyanGlow text-xs font-bold text-white">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex gap-3 pt-2">
+                <button onclick="window.closeModal('modal-debt-adjust')" class="flex-1 py-3 rounded-xl font-bold text-xs text-gray-300 bg-white/5 hover:bg-white/10 transition-all border border-white/10">
+                    إلغاء
+                </button>
+                <button id="debt-adjust-submit-btn" onclick="window.confirmDebtAction()" class="flex-1 py-3 rounded-xl font-bold text-xs text-white glow-btn-emerald transition-all shadow-lg shadow-emeraldGlow/20">
+                    تأكيد وحفظ الدفعة ➔
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- لوحة تحكم الأدمن المركزي (Central Admin Dashboard) -->
-    <div id="modal-admin-portal" class="fixed inset-0 bg-obsidian/90 backdrop-blur-xl z-[400] hidden flex items-center justify-center p-4 overflow-y-auto"> 
-        <div class="glass-card w-full max-w-4xl p-6 md:p-8 rounded-3xl relative border-t-4 border-violetApex shadow-2xl space-y-6 max-h-[90vh] flex flex-col"> 
+    <!-- نافذة كشف حساب الزبون وتفاصيل وسجل الديون والطلبات السابقة (Customer Statement Modal) -->
+    <div id="modal-customer-statement" class="fixed inset-0 bg-obsidian/90 backdrop-blur-xl z-[500] hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-3xl p-6 sm:p-8 rounded-3xl relative border-t-4 border-violetApex shadow-2xl space-y-6 max-h-[90vh] flex flex-col animate__animated animate__zoomIn animate__faster">
             <!-- Header -->
-            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+            <div class="flex justify-between items-start border-b border-white/10 pb-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violetApex to-cyanGlow flex items-center justify-center text-2xl">
-                        👑
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violetApex to-cyanGlow flex items-center justify-center text-2xl shrink-0">
+                        📋
                     </div>
                     <div>
-                        <h3 class="text-xl font-black text-white">لوحة تحكم الأدمن المركزية (SaaS Admin Portal)</h3>
-                        <p class="text-xs text-gray-400 font-bold">إدارة اشتراكات الصالات وعزل البيانات وحالات التفعيل والتجميد</p>
+                        <div class="flex items-center gap-2">
+                            <h3 id="stmt-customer-name" class="text-xl font-black text-white font-ar">كشف حساب الزبون</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violetApex/20 text-violetApex border border-violetApex/30">كشف حساب تفصيلي</span>
+                        </div>
+                        <p class="text-xs text-gray-400 font-ar">سجل كامل للحركات والفواتير والطلبات السابقة والدفعات المسددة</p>
                     </div>
                 </div>
-                <button onclick="window.SaaS.closeAdminPortal()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors">✕</button>
+                <button onclick="window.closeModal('modal-customer-statement')" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center">✕</button>
             </div>
 
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="glass-card p-4 rounded-2xl border border-white/5 flex items-center justify-between">
-                    <div>
-                        <div class="text-[11px] text-gray-400 font-bold">إجمالي الصالات</div>
-                        <div id="admin-stat-total" class="text-2xl font-black text-white font-mono mt-1">0</div>
-                    </div>
-                    <span class="text-2xl">🏬</span>
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-panelDark/80 p-3.5 rounded-2xl border border-white/5">
+                    <span class="text-[11px] text-roseAlert font-bold block mb-1">الرصيد المتبقي (مطلوب دين):</span>
+                    <span id="stmt-balance-due" class="text-xl font-black font-en text-roseAlert">0 IQD</span>
                 </div>
-                <div class="glass-card p-4 rounded-2xl border border-white/5 flex items-center justify-between">
-                    <div>
-                        <div class="text-[11px] text-emeraldGlow font-bold">الصالات المفعلة</div>
-                        <div id="admin-stat-active" class="text-2xl font-black text-emeraldGlow font-mono mt-1">0</div>
-                    </div>
-                    <span class="text-2xl">✅</span>
+                <div class="bg-panelDark/80 p-3.5 rounded-2xl border border-white/5">
+                    <span class="text-[11px] text-gray-400 font-bold block mb-1">عدد الفواتير والطلبات:</span>
+                    <span id="stmt-invoices-count" class="text-xl font-black font-en text-white">0</span>
                 </div>
-                <div class="glass-card p-4 rounded-2xl border border-white/5 flex items-center justify-between">
-                    <div>
-                        <div class="text-[11px] text-roseAlert font-bold">الصالات المجمدة</div>
-                        <div id="admin-stat-blocked" class="text-2xl font-black text-roseAlert font-mono mt-1">0</div>
-                    </div>
-                    <span class="text-2xl">⛔</span>
+                <div class="bg-panelDark/80 p-3.5 rounded-2xl border border-white/5">
+                    <span class="text-[11px] text-emeraldGlow font-bold block mb-1">إجمالي الحركات المسجلة:</span>
+                    <span id="stmt-history-count" class="text-xl font-black font-en text-emeraldGlow">0</span>
                 </div>
             </div>
 
-            <!-- Actions Bar -->
-            <div class="flex justify-between items-center">
-                <h4 class="text-sm font-bold text-gray-300">قائمة الصالات وحالات الاشتراكات:</h4>
-                <div class="flex gap-2">
-                    <button onclick="window.SaaS.loadAdminShops()" class="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold transition-all flex items-center gap-1.5">
-                        <span>🔄</span> تحديث
-                    </button>
-                    <button onclick="window.SaaS.openAddShopModal()" class="px-4 py-2 rounded-xl glow-btn-primary text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-violetApex/30">
-                        <span>+</span> إضافة صالة جديدة
-                    </button>
+            <!-- Statement Content (Scrollable) -->
+            <div class="flex-1 overflow-y-auto space-y-4 max-h-[400px] pr-1">
+                <!-- Section 1: Debt Movements History -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-300 mb-2 flex items-center gap-1.5">
+                        <span>📜</span> سجل حركات الدين والدفعات:
+                    </h4>
+                    <div class="rounded-2xl border border-white/5 bg-panelDark/60 overflow-hidden">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-black/40 text-gray-400 font-bold border-b border-white/5">
+                                <tr>
+                                    <th class="p-3">التاريخ والوقت</th>
+                                    <th class="p-3">نوع الحركة</th>
+                                    <th class="p-3">البيان / الفاتورة</th>
+                                    <th class="p-3">المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stmt-history-tbody" class="divide-y divide-white/5 font-ar">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Shops Table -->
-            <div class="flex-1 overflow-x-auto overflow-y-auto max-h-[380px] rounded-2xl border border-white/5 bg-panelDark/60">
-                <table class="w-full text-right border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-black/40 text-gray-400 font-bold border-b border-white/5 sticky top-0">
-                            <th class="p-4">معرّف الصالة (Tenant ID)</th>
-                            <th class="p-4">اسم الصالة</th>
-                            <th class="p-4">رمز الدخول</th>
-                            <th class="p-4">حالة الاشتراك</th>
-                            <th class="p-4">تاريخ الإنشاء</th>
-                            <th class="p-4">الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-shops-tbody" class="divide-y divide-white/5">
+                <!-- Section 2: Previous Invoices with Items -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-300 mb-2 flex items-center gap-1.5">
+                        <span>🧾</span> تفاصيل الفواتير والطلبات السابقة لهذا الزبون:
+                    </h4>
+                    <div id="stmt-invoices-container" class="space-y-2">
                         <!-- Populated dynamically -->
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
-        </div> 
-    </div>
 
-    <!-- نافذة إضافة صالة جديدة بالأدمن (Add Shop Modal) -->
-    <div id="modal-admin-add-shop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[550] hidden flex items-center justify-center p-4"> 
-        <div class="glass-card w-full max-w-md p-8 rounded-3xl relative border-t-4 border-violetApex space-y-5"> 
-            <button onclick="window.SaaS.closeAddShopModal()" class="absolute top-6 left-6 text-gray-400 hover:text-white">✕</button> 
-            <h3 class="text-xl font-black text-center text-white">إضافة صالة / عميل جديد</h3> 
-            <p class="text-gray-400 text-xs text-center">سيتم تخصيص معزول سحابي مستقل (Isolated Tenant) لهذه الصالة</p> 
-
-            <div class="space-y-4"> 
-                <div> 
-                    <label class="text-xs text-gray-300 font-bold block mb-1">معرّف الصالة (Tenant ID فريد بالإنجليزية):</label> 
-                    <input type="text" id="new-shop-id" placeholder="مثال: baghdad-lounge" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-mono text-white text-left font-bold" dir="ltr"> 
-                </div> 
-                <div> 
-                    <label class="text-xs text-gray-300 font-bold block mb-1">اسم الصالة بالعربي:</label> 
-                    <input type="text" id="new-shop-name" placeholder="مثال: صالة بغداد للمنضدة والبلي" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-bold text-white"> 
-                </div> 
-                <div> 
-                    <label class="text-xs text-gray-300 font-bold block mb-1">رمز الدخول السري (Passcode):</label> 
-                    <input type="text" id="new-shop-passcode" placeholder="مثال: 5500" class="w-full bg-panelDark border border-white/10 rounded-xl p-3 outline-none focus:border-violetApex text-sm font-mono text-white text-left font-bold" dir="ltr"> 
-                </div> 
-            </div> 
-
-            <button onclick="window.SaaS.confirmAddShop()" class="w-full py-3.5 glow-btn-primary rounded-xl font-bold text-white text-sm">
-                حفظ وإنشاء الصالة بالسحابة
-            </button> 
-        </div> 
+            <!-- Footer Actions -->
+            <div class="flex justify-between items-center border-t border-white/10 pt-4">
+                <button onclick="window.printCustomerStatement()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-cyanGlow hover:text-white text-xs font-bold transition-all border border-cyanGlow/20 flex items-center gap-2">
+                    <span>🖨</span> طباعة كشف الحساب
+                </button>
+                <button onclick="window.closeModal('modal-customer-statement')" class="px-6 py-2.5 rounded-xl glow-btn-primary text-white text-xs font-bold transition-all">
+                    إغلاق
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- استدعاء ملفات الجافاسكربت -->
